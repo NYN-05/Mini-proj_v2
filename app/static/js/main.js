@@ -13,6 +13,14 @@ const chooseFileBtn = document.getElementById('chooseFileBtn');
 const dropZone = document.getElementById('dropZone');
 const fileName = document.getElementById('fileName');
 
+// XSS Prevention: HTML escape function
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 function updateCounts() {
   const text = emailInput.value || '';
   const chars = text.length;
@@ -164,7 +172,8 @@ function renderResults(data){
   // Risk factors
   if (data.risk_factors && data.risk_factors.length){
     html += `<ul class="risk-factors-list">`;
-    data.risk_factors.forEach(f => { html += `<li>${f}</li>` });
+    // Escape risk factors to prevent XSS (though backend already escapes)
+    data.risk_factors.forEach(f => { html += `<li>${escapeHtml(f)}</li>` });
     html += `</ul>`;
   } else {
     html += `<div class="alert alert-success" role="alert"><i class="fas fa-smile-wink"></i> No strong risk indicators detected.</div>`;

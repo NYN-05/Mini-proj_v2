@@ -70,7 +70,30 @@ FLASK_CONFIG = {
     'STATIC_FOLDER': 'static',
     'DEBUG': False,
     'HOST': '0.0.0.0',
-    'PORT': 5000
+    'PORT': 5000,
+    'SECRET_KEY': 'change-this-to-a-random-secret-key-in-production',  # IMPORTANT: Change in production!
+    'MAX_CONTENT_LENGTH': 5 * 1024 * 1024,  # 5MB max request size
+    'JSON_SORT_KEYS': False
+}
+
+# ========== Security Configuration ==========
+SECURITY_CONFIG = {
+    'MAX_EMAIL_LENGTH': 100000,  # 100KB max email text
+    'MIN_EMAIL_LENGTH': 10,      # Minimum 10 characters
+    'RATE_LIMIT_PER_MINUTE': 60, # Max 60 requests per minute per IP
+    'ENABLE_CSRF': False,        # Set to True if using forms
+    'SESSION_COOKIE_SECURE': True,
+    'SESSION_COOKIE_HTTPONLY': True,
+    'SESSION_COOKIE_SAMESITE': 'Lax'
+}
+
+# Security Headers
+SECURITY_HEADERS = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
 }
 
 # ========== Analytics Configuration ==========

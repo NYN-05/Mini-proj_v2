@@ -99,6 +99,23 @@ NEGATIVE_WORDS = {
 }
 
 
+def _get_empty_analysis() -> Dict[str, Any]:
+    """Return empty/safe analysis structure when input is invalid."""
+    return {
+        'emotional_scores': {
+            emotion: {'score': 0, 'count': 0, 'raw_score': 0, 'detected': []}
+            for emotion in ['urgency', 'fear', 'greed', 'anxiety', 'deference', 'manipulation']
+        },
+        'hidden_meaning_score': 0,
+        'sentiment': {'polarity': 0, 'label': 'neutral', 'positive_count': 0, 'negative_count': 0},
+        'emotional_conflict': {'has_conflict': False, 'description': 'No emotional markers detected'},
+        'manipulation_risk': {'level': 'LOW', 'score': 0, 'description': 'No manipulation detected'},
+        'total_emotional_markers': 0,
+        'composite_intensity': 0,
+        'risk_factors': []
+    }
+
+
 def analyze_emotional_tone(text: str) -> Dict[str, Any]:
     """
     Analyze email text for emotional manipulation tactics.
@@ -109,7 +126,18 @@ def analyze_emotional_tone(text: str) -> Dict[str, Any]:
     - Detected patterns and their intensities
     - Sentiment polarity
     """
-    text_lower = text.lower()
+    # Input validation and sanitization
+    if not text or not isinstance(text, str):
+        return _get_empty_analysis()
+    
+    # Limit text length for performance (already validated in routes, but double-check)
+    if len(text) > 100000:
+        text = text[:100000]
+    
+    try:
+        text_lower = text.lower()
+    except Exception:
+        return _get_empty_analysis()
     
     # Detect emotional markers
     emotional_scores = {}
@@ -117,58 +145,88 @@ def analyze_emotional_tone(text: str) -> Dict[str, Any]:
     total_intensity = 0
     total_matches = 0
     
-    for emotion, config in EMOTIONAL_PATTERNS.items():
-        score = 0
-        count = 0
-        matches = []
-        
-        for pattern, intensity in config['patterns']:
-            found = re.findall(pattern, text_lower, re.IGNORECASE)
-            if found:
-                match_count = len(found)
-                weighted_score = intensity * match_count * config['weight']
-                score += weighted_score
-                count += match_count
-                total_matches += match_count
-                total_intensity += weighted_score
-                
-                # Store detected patterns (first few examples)
-                for match in found[:3]:
-                    if isinstance(match, tuple):
-                        match_text = ' '.join(str(m) for m in match if m)
-                    else:
-                        match_text = str(match)
-                    matches.append({
-                        'text': match_text,
-                        'intensity': intensity,
-                        'pattern_type': emotion
-                    })
-        
-        # Normalize to 0-10 scale
-        normalized_score = min(score / 10, 10) if score > 0 else 0
-        
-        emotional_scores[emotion] = {
-            'score': round(normalized_score, 2),
-            'count': count,
-            'raw_score': round(score, 2),
-            'detected': matches[:5]  # Top 5 examples
-        }
-        
-        detected_markers[emotion] = matches
+    try:
+        for emotion, config in EMOTIONAL_PATTERNS.items():
+            score = 0
+            count = 0
+            matches = []
+            
+            try:
+                for pattern, intensity in config['patterns']:
+                    try:
+                        found = re.findall(pattern, text_lower, re.IGNORECASE)
+                        if found:
+                            match_count = len(found)
+                            weighted_score = intensity * match_count * config['weight']
+                            score += weighted_score
+                            count += match_count
+                            total_matches += match_count
+                            total_intensity += weighted_score
+                            
+                            # Store detected patterns (first few examples)
+                            for match in found[:3]:
+                                if isinstance(match, tuple):
+                                    match_text = ' '.join(str(m) for m in match if m)
+                                else:
+                                    match_text = str(match)
+                                matches.append({
+                                    'text': match_text,
+                                    'intensity': intensity,
+                                    'pattern_type': emotion
+                                })
+                    except Exception:
+                        # Skip this pattern if regex fails
+                        continue
+            except Exception:
+                # Skip this emotion category if processing fails
+                continue
+            
+            # Normalize to 0-10 scale
+            normalized_score = min(score / 10, 10) if score > 0 else 0
+            
+            emotional_scores[emotion] = {
+                'score': round(normalized_score, 2),
+                'count': count,
+                'raw_score': round(score, 2),
+                'detected': matches[:5]  # Top 5 examples
+            }
+            
+            detected_markers[emotion] = matches
+    except Exception:
+        # If complete failure, return empty analysis
+        return _get_empty_analysis()
     
     # Calculate sentiment polarity
-    sentiment = calculate_sentiment(text_lower)
+    try:
+        sentiment = calculate_sentiment(text_lower)
+    except Exception:
+        sentiment = {'polarity': 0, 'label': 'neutral', 'positive_count': 0, 'negative_count': 0, 'mixed_sentiment': False, 'sentiment_words': 0}
     
     # Calculate hidden meaning score (composite)
-    hidden_meaning_score = calculate_hidden_meaning_score(
-        emotional_scores, sentiment, text_lower
-    )
+    try:
+        hidden_meaning_score = calculate_hidden_meaning_score(
+            emotional_scores, sentiment, text_lower
+        )
+    except Exception:
+        hidden_meaning_score = 0
     
     # Detect emotional conflict (mixed signals)
-    emotional_conflict = detect_emotional_conflict(emotional_scores, sentiment)
+    try:
+        emotional_conflict = detect_emotional_conflict(emotional_scores, sentiment)
+    except Exception:
+        emotional_conflict = {'has_conflict': False, 'description': 'Unable to analyze conflict'}
     
     # Calculate manipulation likelihood
-    manipulation_risk = calculate_manipulation_risk(emotional_scores, sentiment)
+    try:
+        manipulation_risk = calculate_manipulation_risk(emotional_scores, sentiment)
+    except Exception:
+        manipulation_risk = {'level': 'UNKNOWN', 'score': 0, 'description': 'Unable to calculate risk'}
+    
+    # Generate risk factors
+    try:
+        risk_factors = generate_risk_factors(emotional_scores, sentiment)
+    except Exception:
+        risk_factors = []
     
     return {
         'emotional_scores': emotional_scores,
@@ -177,8 +235,8 @@ def analyze_emotional_tone(text: str) -> Dict[str, Any]:
         'emotional_conflict': emotional_conflict,
         'manipulation_risk': manipulation_risk,
         'total_emotional_markers': total_matches,
-        'composite_intensity': round(total_intensity / max(total_matches, 1), 2),
-        'risk_factors': generate_risk_factors(emotional_scores, sentiment)
+        'composite_intensity': round(total_intensity / max(total_matches, 1), 2) if total_matches > 0 else 0,
+        'risk_factors': risk_factors
     }
 
 
