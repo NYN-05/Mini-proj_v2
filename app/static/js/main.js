@@ -35,22 +35,35 @@ chooseFileBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', (e) => {
   const f = e.target.files[0];
   if (!f) return;
-  fileName.textContent = `📄 ${f.name}`;
-  fileName.style.display = 'block';
+  const fileNameSpan = fileName.querySelector('.file-name');
+  if (fileNameSpan) {
+    fileNameSpan.textContent = f.name;
+  } else {
+    fileName.textContent = `📄 ${f.name}`;
+  }
+  fileName.style.display = 'flex';
   const reader = new FileReader();
   reader.onload = (ev) => { emailInput.value = ev.target.result; updateCounts(); };
   reader.readAsText(f);
 });
 
 // Drag & drop
-['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); }));
-['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); }));
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, (e) => { 
+  e.preventDefault(); 
+  e.stopPropagation(); 
+  dropZone.classList.add('drag-over'); 
+}));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, (e) => { 
+  e.preventDefault(); 
+  e.stopPropagation(); 
+  dropZone.classList.remove('drag-over'); 
+}));
 dropZone.addEventListener('drop', (e) => {
   const f = e.dataTransfer.files && e.dataTransfer.files[0];
   if (!f) return;
-  fileInput.files = e.dataTransfer.files;
-  fileName.textContent = `📄 ${f.name}`;
-  fileName.style.display = 'block';
+  const fileNameSpan = fileName.querySelector('.file-name') || fileName;
+  fileNameSpan.textContent = f.name;
+  fileName.style.display = 'flex';
   const reader = new FileReader();
   reader.onload = (ev) => { emailInput.value = ev.target.result; updateCounts(); };
   reader.readAsText(f);
