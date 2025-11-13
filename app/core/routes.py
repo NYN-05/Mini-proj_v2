@@ -42,7 +42,7 @@ def detect_phishing():
         return jsonify({'error': 'No email_text provided'}), 400
 
     if MODEL_BUNDLE is None:
-        return jsonify({'error': 'Models not found. Run training script first (src/train_models.py)'}), 500
+        return jsonify({'error': 'Models not found. Run training script first (src/train_from_csv.py)'}), 500
 
     # 1. Basic AI/ML prediction
     pred = predict_phishing(email_text, MODEL_BUNDLE)
@@ -60,11 +60,12 @@ def detect_phishing():
     combined_confidence = (ml_weight * pred['confidence']) + (url_risk_weight * url_risk_normalized)
     
     # Adjust classification based on combined score
+    # Using threshold of 0.45 (lowered from 0.5 for better recall)
     if url_analysis['has_suspicious_urls'] and url_analysis['overall_risk'] >= 50:
         # High-risk URLs detected - increase likelihood of phishing
         combined_confidence = max(combined_confidence, 0.7)
         final_classification = 'PHISHING'
-    elif combined_confidence >= 0.5:
+    elif combined_confidence >= 0.45:
         final_classification = 'PHISHING'
     else:
         final_classification = 'LEGITIMATE'
@@ -98,6 +99,26 @@ def detect_phishing():
     # Add URL-based risk factors
     risk_factors.extend(url_risk_factors)
     
+    # Add emotional analysis risk factors
+    emotional_analysis = pred.get('emotional_analysis', {})
+    if emotional_analysis:
+        emotional_risk_factors = emotional_analysis.get('risk_factors', [])
+        risk_factors.extend(emotional_risk_factors)
+    
+    # Word-level analysis (per-token indicators)
+    try:
+        word_analysis = []
+        try:
+            # The ModelBundle instance is available as MODEL_BUNDLE
+            from app.core import word_level_analysis as _wl
+            word_analysis = _wl(email_text, MODEL_BUNDLE)
+        except Exception:
+            # Fallback: try detector.word_level_analysis
+            from app.detector import word_level_analysis as _wl2
+            word_analysis = _wl2(email_text, MODEL_BUNDLE)
+    except Exception:
+        word_analysis = []
+    
     response = {
         'classification': final_classification,
         'confidence': float(combined_confidence),
@@ -115,6 +136,16 @@ def detect_phishing():
             'overall_url_risk': url_analysis['overall_risk'],
             'suspicious_urls': url_analysis['has_suspicious_urls'],
             'url_details': url_analysis['urls']
+        },
+        'word_analysis': word_analysis,
+        # Emotional tone analysis
+        'emotional_analysis': {
+            'hidden_meaning_score': emotional_analysis.get('hidden_meaning_score', 0),
+            'manipulation_risk': emotional_analysis.get('manipulation_risk', {}),
+            'emotional_scores': emotional_analysis.get('emotional_scores', {}),
+            'sentiment': emotional_analysis.get('sentiment', {}),
+            'emotional_conflict': emotional_analysis.get('emotional_conflict', {}),
+            'summary': emotional_analysis.get('composite_intensity', 0)
         }
     }
     

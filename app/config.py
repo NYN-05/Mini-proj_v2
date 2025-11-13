@@ -107,3 +107,23 @@ FEATURES = {
     'behavior_analysis_enabled': False,  # Part of advanced detection
     'threat_intelligence_enabled': False  # Part of advanced detection
 }
+
+
+# ========== Explainer / Explainability Configuration ==========
+# Centralize text/HTML templates and thresholds used by explainability helpers.
+EXPLAINER_CONFIG = {
+    # CSS class to wrap high-risk keywords with
+    'highlight_class': 'risk-high',
+    # HTML tag used for highlighting (span, mark, etc.)
+    'highlight_tag': 'span',
+    # Whether to escape HTML in input text before highlighting
+    'escape_html': True,
+    # Urgency score threshold (0-10 scale) above which urgency is reported
+    'urgency_threshold': 6,
+    # Label templates (formatted with .format or f-strings)
+    'templates': {
+        'keywords': 'High-risk keywords: {keywords}',
+        'urgency': 'Urgency detected (score {score}/10)',
+        'model_agreement': 'Model agreement: {details}'
+    }
+}

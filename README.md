@@ -14,7 +14,7 @@ EduShield is a lightweight Flask-based prototype for academic-phishing detection
 - Explainability: highlight keywords and produce human-readable risk factors.
 - Analytics: local SQLite DB storing prediction history, daily statistics, phishing patterns, model performance, and functions for extracting analytics.
 - Education module: endpoints that return categorized security tips for users.
-- Lightweight training pipeline: `train_models.py` generates TF-IDF and model artifacts and includes data augmentation techniques (homoglyph obfuscation, small augmentations).
+ - Lightweight training pipeline: `src/train_from_csv.py` generates TF-IDF and model artifacts and trains from the canonical `Phishing_Email.csv` located at the project root.
 - Feature flags in config to enable/disable analytics/admin/education/advanced detection.
 - Prototype-ready quick start flow and pytest integration (test that runs training + sample prediction).
 
@@ -29,7 +29,7 @@ EduShield is a lightweight Flask-based prototype for academic-phishing detection
 - Testing: pytest
 - Other: nltk is listed though not heavily referenced in files we inspected
 
-Files consulted to derive this: `requirements.txt`, `app.py`, `config.py`, `train_models.py`, `app/core/*`, `app/modules/*`, `README.md`.
+Files consulted to derive this: `requirements.txt`, `app.py`, `config.py`, `src/train_from_csv.py`, `app/core/*`, `app/modules/*`, `README.md`.
 
 ## Architecture & runtime overview
 
@@ -44,11 +44,11 @@ Files consulted to derive this: `requirements.txt`, `app.py`, `config.py`, `trai
 - Explainability: `explainer.py` highlights keywords and produces risk factors from predictions.
 - Analytics module: `database.py` sets up SQLite schema and provides logging and analytics queries.
 - Admin/education blueprints: `routes.py`, `routes.py` + `tips.py`
-- Training script: `train_models.py` to build models and save artifacts to `models` (TF-IDF, logistic, nb, svm, stacking/pipeline).
+- Training script: `src/train_from_csv.py` to build models and save artifacts to `models` (TF-IDF, logistic, nb, svm, stacking/pipeline).
 
 ### Data & artifact flow
 
-1. Training: `train_models.py` builds TF-IDF vectorizer, extracts URL-derived numerical features (via `app.core.url_filter.url_features_from_text`), stacks classifiers, saves artifacts to `models` (`tfidf.pkl`, `logistic.pkl`, `nb.pkl`, `svm.pkl`, `stacking.pkl`, `pipeline.pkl`).
+1. Training: `src/train_from_csv.py` builds TF-IDF vectorizer, extracts URL-derived numerical features (via `app.core.url_filter.url_features_from_text`), stacks classifiers, saves artifacts to `models` (`tfidf.pkl`, `logistic.pkl`, `nb.pkl`, `svm.pkl`, `stacking.pkl`, `pipeline.pkl`).
 2. Runtime: `app/core/routes.detect_phishing` loads models via `ModelBundle` and uses `predict_phishing()` to compute ML confidence. `filter_urls()` is run to get URL analysis. The endpoint combines scores to produce a final classification and response.
 3. Analytics Logging (if enabled): `log_prediction()` writes the prediction and metadata to SQLite; additional functions update daily stats and patterns.
 
@@ -71,7 +71,7 @@ Files consulted to derive this: `requirements.txt`, `app.py`, `config.py`, `trai
 	- `predict_phishing()`: main ML + heuristic combination compute; builds ensemble score; calculates urgency, header risk and final score; returns dict with classification, confidence, model_probs, urgency & other diagnostics.
 	- Utility functions: `calculate_urgency_score`, `calculate_phishing_indicators_score`, `extract_academic_keywords`.
 - `url_filter.py`
-	- URL extraction, homograph detection, shortener resolution (optional requests), path/suspicious pattern checks, per-URL `analyze_single_url()`, `filter_urls()` and `url_features_from_text()` (returns numeric features used at training/prediction).
+	- URL extraction, homograph detection, path/suspicious pattern checks, per-URL `analyze_single_url()`, `filter_urls()` and `url_features_from_text()` (returns numeric features used at training/prediction). Shortener resolution via network calls has been removed.
 - `explainer.py`
 	- `highlight_keywords()` (wraps tokens in spans) and `risk_factors_from_prediction()`.
 - `routes.py` (core)
@@ -84,7 +84,7 @@ Files consulted to derive this: `requirements.txt`, `app.py`, `config.py`, `trai
 	- Admin dashboard route (render `admin_dashboard.html`).
 - `tips.py` and `routes.py` (education)
 	- Provide security tips endpoint.
-- `train_models.py`
+- `src/train_from_csv.py`
 	- Training pipeline (synthetic dataset + augmentation), vectorizer fitting, stacking model training, evaluation, and artifact saving (`pipeline.pkl`, `stacking.pkl`, `tfidf.pkl`, etc.).
 - `models/` (artifacts created by training): expected `tfidf.pkl`, `logistic.pkl`, `nb.pkl`, `svm.pkl`, `stacking.pkl`, `pipeline.pkl`
 - `templates/` and `static/` (frontend UI & assets): simple UI referenced by `routes.py`.
@@ -130,7 +130,7 @@ Notes: Simple schema is appropriate for prototype; migration/versioning or switc
 
 - `README.md` contains quick-start and high-level notes (how-to: install, train, run, test).
 - `test_predictor.py`:
-	- Runs `train_models.py` and then imports the predictor to make a single sample prediction. It is a functional/integration test.
+	- Runs `src/train_from_csv.py` and then imports the predictor to make a single sample prediction. It is a functional/integration test.
 - No dedicated unit tests for URL filtering, explainers, or analytics were found (only the integration test).
 
 ## Quick "try it locally" (PowerShell)
@@ -146,7 +146,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # train models (creates models/)
-python src/train_models.py
+python src/train_from_csv.py
 
 # run the Flask app
 python app/app.py
@@ -175,7 +175,7 @@ I ran a code compilation check across the repository to surface syntax errors.
 - Model management: artifacts are saved as pickles. No versioning, no model metadata, no reproducible training logs. Production-grade model registry or at least consistent naming & version metadata is recommended.
 - Security: The API has no authentication, rate-limiting, or input sanitization beyond small checks — risky for public APIs.
 - Email parsing: current pipeline expects `email_text` plain text. Complex multipart email parsing and attachment scanning is not implemented in the web API (training includes simple text).
-- Network calls (e.g., `requests` to resolve URL shorteners) are optional and will silently fall back if `requests` isn't installed; but network I/O in request/response path can cause latency and should be performed async or deferred in production.
+- Network shortener resolution via runtime HTTP requests has been removed from this project to ensure deterministic, fast feature extraction and prediction. URL analysis relies only on static heuristics (domain checks, TLD lists, homograph detection, path patterns, and anchor mismatches).
 - Tests re-train models; this slows CI. Prefer tests that mock or use precomputed artifacts to be faster and deterministic.
 - Explainability is basic (keyword highlighting) — consider SHAP/LIME for model-level explanations.
 

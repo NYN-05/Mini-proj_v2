@@ -440,3 +440,368 @@ html, body {
   .container-lg { padding: 0 1rem; }
 }
 
+/* ============================================
+   WORD-LEVEL ANALYSIS TABLE
+   ============================================ */
+.word-analysis-table-wrap {
+  width: 100%;
+  overflow: auto;
+  border: 1px solid var(--neutral-border);
+  border-radius: var(--radius);
+  background: white;
+  padding: 0.5rem;
+}
+.word-analysis-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 680px; /* allow horizontal scroll on small screens */
+}
+.word-analysis-table thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, #ffffff, #fafafa);
+  color: var(--text-secondary);
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--neutral-border);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.word-analysis-table tbody td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--neutral-border);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+.word-analysis-table .center-cell { text-align: center; width: 6%; }
+.word-analysis-table tbody tr:nth-child(odd) td {
+  background: #ffffff;
+}
+.word-analysis-table tbody tr:nth-child(even) td {
+  background: #fbfbfb;
+}
+.word-analysis-table .token-cell {
+  font-family: 'Courier New', monospace;
+  width: 30%;
+  max-width: 320px;
+  word-break: break-word;
+}
+.word-analysis-table td { white-space: pre-wrap; }
+.word-analysis-table .indicators-cell { color: var(--text-secondary); font-size: 0.85rem; }
+.word-analysis-table .model-cell { font-weight: 600; color: var(--primary-color); }
+
+.word-analysis-table-wrap::-webkit-scrollbar { height: 8px; }
+.word-analysis-table-wrap::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 4px; }
+
+/* ============================================
+   EMOTIONAL TONE ANALYSIS
+   ============================================ */
+
+.emotional-analysis {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border: 1px solid #d0d5ff;
+}
+
+.emotional-score-card {
+  background: white;
+  padding: 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.emotional-score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.emotional-score-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.emotional-score-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emotional-score-badge.low-risk {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.emotional-score-badge.medium-risk {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.emotional-score-badge.high-risk {
+  background: #ffe5e5;
+  color: #cc0000;
+}
+
+.emotional-score-badge.critical-risk {
+  background: var(--danger-light);
+  color: var(--danger-color);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.emotional-score-bar-container {
+  width: 100%;
+  height: 24px;
+  background: #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.emotional-score-bar {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.6s ease-out;
+  position: relative;
+}
+
+.emotional-score-bar.low-risk {
+  background: linear-gradient(90deg, var(--success-color), #2dcc70);
+}
+
+.emotional-score-bar.medium-risk {
+  background: linear-gradient(90deg, var(--warning-color), #ffd700);
+}
+
+.emotional-score-bar.high-risk {
+  background: linear-gradient(90deg, #ff6b35, #ff8c42);
+}
+
+.emotional-score-bar.critical-risk {
+  background: linear-gradient(90deg, var(--danger-color), #ff4444);
+}
+
+.emotional-score-value {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+/* Emotional Markers Grid */
+.emotional-markers {
+  margin-top: 1rem;
+}
+
+.emotional-markers-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emotional-markers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.emotional-marker-card {
+  background: white;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  border-left: 4px solid #ddd;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.emotional-marker-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.emotional-marker-card.marker-low {
+  border-left-color: var(--success-color);
+}
+
+.emotional-marker-card.marker-medium {
+  border-left-color: var(--warning-color);
+}
+
+.emotional-marker-card.marker-high {
+  border-left-color: #ff6b35;
+}
+
+.emotional-marker-card.marker-critical {
+  border-left-color: var(--danger-color);
+  background: #fff8f8;
+}
+
+.marker-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.marker-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.marker-score {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.25rem;
+}
+
+.marker-count {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Sentiment Card */
+.sentiment-card {
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+  border-left: 4px solid #adb5bd;
+}
+
+.sentiment-card.sentiment-positive {
+  border-left-color: var(--success-color);
+  background: #f8fff8;
+}
+
+.sentiment-card.sentiment-negative {
+  border-left-color: var(--danger-color);
+  background: #fff8f8;
+}
+
+.sentiment-card.sentiment-neutral {
+  border-left-color: #6c757d;
+  background: #f8f9fa;
+}
+
+.sentiment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sentiment-header i {
+  font-size: 1.25rem;
+}
+
+.sentiment-details {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.mixed-warning {
+  color: var(--danger-color);
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+/* Manipulation Risk Card */
+.manipulation-risk-card {
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+  border: 2px solid #ddd;
+}
+
+.manipulation-risk-card.manip-low {
+  border-color: var(--success-color);
+  background: #f8fff8;
+}
+
+.manipulation-risk-card.manip-medium {
+  border-color: var(--warning-color);
+  background: #fffef5;
+}
+
+.manipulation-risk-card.manip-high {
+  border-color: #ff6b35;
+  background: #fff5f0;
+}
+
+.manipulation-risk-card.manip-critical {
+  border-color: var(--danger-color);
+  background: var(--danger-light);
+}
+
+.manip-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.manip-details {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.manip-detected {
+  color: var(--danger-color);
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+/* Emotional Conflict Card */
+.emotional-conflict-card {
+  background: #fff9e6;
+  border: 2px solid #ffe066;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-top: 1rem;
+}
+
+.conflict-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #856404;
+  margin-bottom: 0.5rem;
+}
+
+.conflict-description {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.conflict-score {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+
+

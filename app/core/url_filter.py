@@ -24,10 +24,11 @@ import unicodedata
 import html
 import socket
 
-try:
-    import requests
-except Exception:
-    requests = None
+# No network resolution: remove runtime HTTP requests to avoid blocking
+# The code previously attempted to import `requests` and perform HEAD
+# calls to resolve URL shorteners. Network I/O during feature
+# extraction or prediction can hang training/inference and is removed
+# for this project. `resolve_shortener()` now returns the original URL.
 
 
 def extract_urls(text: str) -> List[str]:
@@ -155,18 +156,14 @@ def check_homograph_attack(url: str) -> bool:
 
 
 def resolve_shortener(url: str, timeout: float = 3.0) -> str:
-    """Attempt to resolve a shortened URL to its final destination.
+    """Resolve shorteners without network I/O.
 
-    This will perform a HEAD request and follow redirects if `requests` is
-    available. If not available or network fails, returns the original URL.
+    Network resolution has been removed from the project. This function
+    intentionally does not perform HTTP requests and simply returns the
+    provided URL so that feature extraction and prediction remain
+    deterministic and non-blocking.
     """
-    if requests is None:
-        return url
-    try:
-        resp = requests.head(url, allow_redirects=True, timeout=timeout)
-        return resp.url or url
-    except Exception:
-        return url
+    return url
 
 
 def has_excessive_subdomains(url: str, threshold: int = 3) -> bool:
