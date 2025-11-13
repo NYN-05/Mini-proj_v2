@@ -6,3 +6,4 @@ scikit-learn==1.2.2
 pandas==2.2.2
 nltk==3.8.1
 pytest==7.4.0
+serverless-wsgi==3.0.3
